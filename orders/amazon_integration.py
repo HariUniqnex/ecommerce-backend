@@ -2,7 +2,7 @@ import requests
 from datetime import datetime
 from .models import Order, Product
 from decouple import config
-import time  # For rate limiting
+import time 
 
 def get_access_token():
     token_url = config('AMAZON_TOKEN_URL')
@@ -35,25 +35,18 @@ def fetch_order_items(order_id, access_token):
         return []
 
 def extract_brand_from_item(item):
-    """
-    Extract brand from order item - simple first word approach
-    """
+  
     title = item.get('Title', '')
     if title:
         words = title.split()
         if words:
             first_word = words[0]
-            # Optional: Add some validation
             if len(first_word) > 1 and first_word.isalpha():
                 return first_word
     
     return 'Unknown'
 
-import requests
-from datetime import datetime
-from .models import Order, Product
-from decouple import config
-import time  # For rate limiting
+
 
 def get_access_token():
     token_url = config('AMAZON_TOKEN_URL')
@@ -104,8 +97,8 @@ def fetch_and_save_amazon_orders():
             return
 
         today = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        orders_url = f"{config('AMAZON_ORDERS_API_URL')}&LastUpdatedAfter={today}"
+        
+        orders_url = f"{config('AMAZON_API_BASE_URL')}/orders/v0/orders?MarketplaceIds=ATVPDKIKX0DER&LastUpdatedAfter=2024-01-01T00:00:00Z&LastUpdatedBefore={today}"
         
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -142,7 +135,8 @@ def fetch_and_save_amazon_orders():
                     if items:
                         print("Available fields in first item:", list(items[0].keys()))
                         print("Full first item:", items[0])
-                    time.sleep(1) 
+                    time.sleep(1)  # Rate limiting
+                    
                     products = []
                     for item in items:
                         try:
@@ -195,7 +189,7 @@ def fetch_and_save_amazon_orders():
 
             next_token = response.json().get('nextToken')
             if next_token:
-                orders_url = f"{config('AMAZON_ORDERS_API_URL')}&LastUpdatedAfter={today}&nextToken={next_token}"
+                orders_url = f"{config('AMAZON_API_BASE_URL')}/orders/v0/orders?MarketplaceIds=ATVPDKIKX0DER&LastUpdatedAfter=2024-01-01T00:00:00Z&LastUpdatedBefore={today}&NextToken={next_token}"
             else:
                 orders_url = None  
 
