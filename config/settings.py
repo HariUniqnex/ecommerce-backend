@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 # CORS settings for your frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://ecommerce-frontend-slug.onrender.com"
 ]
 
 MIDDLEWARE = [
