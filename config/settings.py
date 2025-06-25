@@ -118,14 +118,14 @@ CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-backend-bmyp.onrender.com",
 ]
 
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-X_FRAME_OPTIONS = 'DENY'
+# SECURE_SSL_REDIRECT = not DEBUG
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+# SECURE_HSTS_PRELOAD = not DEBUG
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# X_FRAME_OPTIONS = 'DENY'
 
 LOGGING = {
     'version': 1,
@@ -141,6 +141,10 @@ LOGGING = {
             'level': 'INFO',
         },
         'orders': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'mongoengine': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
