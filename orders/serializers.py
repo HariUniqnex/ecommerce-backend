@@ -10,7 +10,10 @@ class ProductSerializer(serializers.Serializer):
 
 class OrderSerializer(serializers.Serializer):
     order_id = serializers.SerializerMethodField()
+    purchase_date=serializers.DateTimeField()
     products = ProductSerializer(many=True)
+    shipping_address=serializers.DictField()
+    paymentMethod=serializers.CharField()
 
     def get_order_id(self, obj):
         return str(obj.id if hasattr(obj, 'id') else obj.get('_id', ''))

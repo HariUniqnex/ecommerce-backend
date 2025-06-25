@@ -12,5 +12,6 @@ class Order(Document):
     purchase_date = fields.DateTimeField(required=True)
     order_status = fields.StringField(required=True)
     products = fields.ListField(fields.EmbeddedDocumentField(Product), required=True)
+    paymentMethod=fields.StringField(required=True)
     marketplace_id = fields.StringField()
     shipping_address = fields.DictField()

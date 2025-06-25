@@ -5,7 +5,6 @@ from decouple import config
 import time  # For rate limiting
 
 def get_access_token():
-    """Retrieve access token for Amazon SP-API"""
     token_url = config('AMAZON_TOKEN_URL')
     payload = {
         'grant_type': 'refresh_token',
@@ -18,7 +17,6 @@ def get_access_token():
     return response.json().get('access_token')
 
 def fetch_order_items(order_id, access_token):
-    """Fetch detailed items for a specific order"""
     items_url = f"{config('AMAZON_API_BASE_URL')}/orders/v0/orders/{order_id}/orderItems"
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -28,6 +26,7 @@ def fetch_order_items(order_id, access_token):
     
     try:
         response = requests.get(items_url, headers=headers)
+        print('response', response)
         response.raise_for_status()
         items_data = response.json()
         return items_data.get('payload', {}).get('OrderItems', [])
@@ -35,15 +34,28 @@ def fetch_order_items(order_id, access_token):
         print(f"Failed to fetch items for order {order_id}: {str(e)}")
         return []
 
+def extract_brand_from_item(item):
+    """
+    Extract brand from order item - simple first word approach
+    """
+    title = item.get('Title', '')
+    if title:
+        words = title.split()
+        if words:
+            first_word = words[0]
+            # Optional: Add some validation
+            if len(first_word) > 1 and first_word.isalpha():
+                return first_word
+    
+    return 'Unknown'
+
 def fetch_and_save_amazon_orders():
-    """Main function to fetch and save Amazon orders with complete product details"""
     try:
         access_token = get_access_token()
         if not access_token:
             print("Failed to fetch access token")
             return
 
-        # Configure API request
         orders_url = config('AMAZON_ORDERS_API_URL')
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -51,7 +63,6 @@ def fetch_and_save_amazon_orders():
             'Content-Type': 'application/json'
         }
 
-        # Fetch orders
         print("Fetching orders from Amazon API...")
         response = requests.get(orders_url, headers=headers)
         response.raise_for_status()
@@ -70,32 +81,37 @@ def fetch_and_save_amazon_orders():
                 if not order_id:
                     continue
 
-                # Check if order already exists
                 if Order.objects(order_id=order_id).first():
                     print(f"Order {order_id} already exists, skipping")
                     continue
 
-                # Fetch detailed items for this order
                 print(f"Fetching items for order {order_id}...")
                 items = fetch_order_items(order_id, access_token)
-                time.sleep(1)  # Rate limiting
+                if items:
+                    print("Available fields in first item:", list(items[0].keys()))
+                    print("Full first item:", items[0])
+                time.sleep(1)  
 
-                # Process products
                 products = []
                 for item in items:
                     try:
+                        # Use the extract_brand_from_item function instead of item.get('Brand')
+                        brand = extract_brand_from_item(item)
+                        
                         product = Product(
                             title=item.get('Title', 'Unknown Product'),
                             quantity=int(item.get('QuantityOrdered', 1)),
                             price=float(item.get('ItemPrice', {}).get('Amount', 0.0)),
-                            brand=item.get('Brand', 'Unknown'),
+                            brand=brand,  # Use extracted brand
                             asin=item.get('ASIN', '')
                         )
+                        
                         products.append(product)
+                        print(f"Product saved with brand: {brand}")
+                        print(products)
                     except Exception as e:
                         print(f"Error processing item {item.get('OrderItemId')}: {str(e)}")
 
-                # Create minimal product if none found
                 if not products:
                     products.append(Product(
                         title=f"Amazon Order {order_id}",
@@ -105,7 +121,6 @@ def fetch_and_save_amazon_orders():
                         asin="N/A"
                     ))
 
-                # Create and save order
                 order_obj = Order(
                     order_id=order_id,
                     purchase_date=datetime.strptime(
@@ -115,7 +130,8 @@ def fetch_and_save_amazon_orders():
                     order_status=order.get('OrderStatus'),
                     products=products,
                     marketplace_id=order.get('MarketplaceId'),
-                    shipping_address=order.get('ShippingAddress', {})
+                    shipping_address=order.get('ShippingAddress', {}),
+                    paymentMethod=order.get("PaymentMethod", "Other")
                 )
                 
                 order_obj.save()
