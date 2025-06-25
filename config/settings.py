@@ -1,12 +1,10 @@
 import os
 from decouple import config
-from mongoengine import connect
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
-
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = [
@@ -25,7 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'orders.apps.OrdersConfig',
+    'orders.apps.OrdersConfig',  # MongoDB connection happens here
 ]
 
 MIDDLEWARE = [
@@ -59,35 +57,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# MongoDB connection
-try:
-    connect(
-    db=config("MONGO_DB_NAME"),
-    host=config("MONGO_DB_URI"),
-    connectTimeoutMS=30000,
-    socketTimeoutMS=30000,
-)
-    print("MongoDB connection successful")
-except Exception as e:
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.error(f"MongoDB connection failed: {e}")
+# MongoDB connection is now handled inside the AppConfig (in orders/apps.py)
 
-# Empty DATABASES for mongoengine use
 DATABASES = {}
 
-# Static files setup
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Language and timezone
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -104,7 +86,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://ecommerce-frontend-slug.onrender.com",
@@ -132,13 +113,11 @@ CORS_ALLOWED_METHODS = [
     'PUT',
 ]
 
-# CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com",
     "https://ecommerce-backend-bmyp.onrender.com",
 ]
 
-# Security Settings
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
@@ -148,7 +127,6 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
