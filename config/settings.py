@@ -15,7 +15,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'ecommerce-backend-bmyp.onrender.com',  
     '.onrender.com',
-    '*',  # Allow all hosts for debugging - remove in production
+    '*',  
 ]
 
 INSTALLED_APPS = [
@@ -30,16 +30,14 @@ INSTALLED_APPS = [
     'rest_framework',
 ]
 
-# CORS Configuration - More permissive settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://ecommerce-frontend-slug.onrender.com",
-    "http://localhost:3000",  # Common React dev port
+    "http://localhost:3000",  
     "http://127.0.0.1:5173",
 ]
 
-# Additional CORS settings for better compatibility
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in debug mode
+CORS_ALLOW_ALL_ORIGINS = DEBUG  
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_HEADERS = [
     'accept',
@@ -62,21 +60,19 @@ CORS_ALLOWED_METHODS = [
     'PUT',
 ]
 
-# Security settings - adjusted for deployment
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
-# Disable CSRF for API endpoints (or configure properly)
 CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com",
     "https://ecommerce-backend-bmyp.onrender.com",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -106,14 +102,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# MongoDB connection with error handling
 try:
     connect(
         db=config("MONGO_DB_NAME"),
         host=config("MONGO_DB_URI"),
-        serverSelectionTimeoutMS=5000,  # 5 second timeout
-        connectTimeoutMS=10000,  # 10 second connection timeout
-        socketTimeoutMS=20000,  # 20 second socket timeout
+        serverSelectionTimeoutMS=5000,  
+        connectTimeoutMS=10000,
+        socketTimeoutMS=20000, 
     )
     print("MongoDB connection successful")
 except Exception as e:
@@ -137,11 +132,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # For debugging - adjust as needed
+        'rest_framework.permissions.AllowAny',  
     ],
 }
 
-# Logging configuration for debugging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -155,7 +149,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
-        'orders': {  # Your app name
+        'orders': { 
             'handlers': ['console'],
             'level': 'DEBUG',
         },
