@@ -106,9 +106,6 @@ try:
     connect(
         db=config("MONGO_DB_NAME"),
         host=config("MONGO_DB_URI"),
-        serverSelectionTimeoutMS=5000,  
-        connectTimeoutMS=10000,
-        socketTimeoutMS=20000, 
     )
     print("MongoDB connection successful")
 except Exception as e:
