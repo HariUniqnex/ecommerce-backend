@@ -18,8 +18,8 @@ class OrdersConfig(AppConfig):
                 host=config('MONGO_DB_URI'),
                 tls=True,  
                 tlsCAFile=certifi.where(), 
-                connectTimeoutMS=30000,  
-                socketTimeoutMS=30000,  
+                connectTimeoutMS=300000,  
+                socketTimeoutMS=300000,  
             )
             logger.info("MongoDB connection successful")
         except Exception as e:
