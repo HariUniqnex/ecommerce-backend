@@ -62,9 +62,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # MongoDB connection
 try:
     connect(
-        db=config("MONGO_DB_NAME"),
-        host=config("MONGO_DB_URI"),
-    )
+    db=config("MONGO_DB_NAME"),
+    host=config("MONGO_DB_URI"),
+    connectTimeoutMS=30000,
+    socketTimeoutMS=30000,
+)
     print("MongoDB connection successful")
 except Exception as e:
     import logging
