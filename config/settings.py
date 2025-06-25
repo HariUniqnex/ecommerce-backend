@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'orders',
     'rest_framework',
+     'orders.apps.OrdersConfig'
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -109,8 +110,10 @@ try:
     )
     print("MongoDB connection successful")
 except Exception as e:
-    print(f"MongoDB connection failed: {e}")
-
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error(f"MongoDB connection failed: {e}")
+    
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
