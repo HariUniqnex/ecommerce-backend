@@ -11,9 +11,13 @@ class OrdersConfig(AppConfig):
         try:
            
             connect(
-                db=config("MONGO_DB_NAME"),
-                host=config("MONGO_DB_URI"),
-            )
+    db=config("MONGO_DB_NAME"),
+    host=config("MONGO_DB_URI"),
+    connectTimeoutMS=30000,  
+    socketTimeoutMS=30000,  
+    ssl=True,
+    tlsAllowInvalidCertificates=False,
+)
             print("MongoDB connection successful")
         except Exception as e:
             
