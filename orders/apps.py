@@ -1,5 +1,5 @@
-# orders/apps.py
 from django.apps import AppConfig
+from decouple import config  # Add this import
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,6 @@ class OrdersConfig(AppConfig):
     name = 'orders'
 
     def ready(self):
-        # Don't connect here - just initialize signals if needed
         if config('INIT_DB_ON_STARTUP', default=False, cast=bool):
             self._connect_to_mongo()
 
