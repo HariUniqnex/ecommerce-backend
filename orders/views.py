@@ -49,30 +49,45 @@ class DashboardStatsView(APIView):
             for status, count in status_counts.items()
         ]
 
-        monthly_data = defaultdict(int)
-        all_months = [calendar.month_abbr[i] for i in range(1, 13)]  
+        monthly_yearly_data = defaultdict(lambda: defaultdict(int))
+        all_months = [calendar.month_abbr[i] for i in range(1, 13)]
         
-        for month in all_months:
-            monthly_data[month] = 0
-            
+        years = set()
         for order in orders:
             try:
-                month = order.purchase_date.strftime("%b") 
-                monthly_data[month] += sum(p.price * p.quantity for p in order.products)
+                year = order.purchase_date.year
+                years.add(year)
             except AttributeError:
-                continue  
+                continue
+        
+        for year in years:
+            for month in all_months:
+                monthly_yearly_data[year][month] = 0
+        
+        for order in orders:
+            try:
+                month = order.purchase_date.strftime("%b")
+                year = order.purchase_date.year
+                monthly_yearly_data[year][month] += sum(p.price * p.quantity for p in order.products)
+            except AttributeError:
+                continue
 
-        monthly_totals = [
-            {"month": month, "total": monthly_data[month]}
-            for month in all_months
-        ]
+        monthly_totals = []
+        for year in sorted(monthly_yearly_data.keys()):
+            for month in all_months:
+                monthly_totals.append({
+                    "month": month,
+                    "year": year,
+                    "total": monthly_yearly_data[year][month]
+                })
 
         return Response({
             'totalOrders': total_orders,
             'totalRevenue': total_revenue,
             'avgOrderValue': average_order_value,
             'statusCounts': status_counts_data,
-            "monthlyTotals": monthly_totals
+            "monthlyTotals": monthly_totals,
+            "availableYears": sorted(years)  
         })
 class OrderDetailView(APIView):
     def get(self,request,order_id):
