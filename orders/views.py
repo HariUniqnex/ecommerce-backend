@@ -31,7 +31,6 @@ from .models import Order
 class DashboardStatsView(APIView):
     def get(self, request):
         orders = Order.objects()
-        print("ORDERS",orders)
         total_orders = orders.count()
 
         total_revenue = sum(
@@ -51,6 +50,11 @@ class DashboardStatsView(APIView):
         ]
 
         monthly_data = defaultdict(int)
+        all_months = [calendar.month_abbr[i] for i in range(1, 13)]  
+        
+        for month in all_months:
+            monthly_data[month] = 0
+            
         for order in orders:
             try:
                 month = order.purchase_date.strftime("%b") 
@@ -59,8 +63,8 @@ class DashboardStatsView(APIView):
                 continue  
 
         monthly_totals = [
-            {"month": m, "total": monthly_data[m]}
-            for m in calendar.month_abbr[1:] if m in monthly_data
+            {"month": month, "total": monthly_data[month]}
+            for month in all_months
         ]
 
         return Response({
@@ -70,7 +74,6 @@ class DashboardStatsView(APIView):
             'statusCounts': status_counts_data,
             "monthlyTotals": monthly_totals
         })
-   
 class OrderDetailView(APIView):
     def get(self,request,order_id):
         try:
