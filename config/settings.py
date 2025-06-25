@@ -8,9 +8,16 @@ print("MONGO_DB_URI:", config("MONGO_DB_URI"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
-DEBUG = True
+# Use environment variable for DEBUG, default to False in production
+DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# CRITICAL: Add your actual backend domain
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1',
+    'ecommerce-backend-slug.onrender.com',  # Replace with your actual backend domain
+    '.onrender.com',  # Allow all Render subdomains
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -30,8 +37,18 @@ CORS_ALLOWED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com"
 ]
 
+# Allow credentials for authenticated requests
+CORS_ALLOW_CREDENTIALS = True
+
+# Security settings for production
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # <--- must be first!
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
