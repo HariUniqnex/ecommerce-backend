@@ -6,6 +6,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
+
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = [
@@ -38,50 +39,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# --- CORS CONFIGURATION ---
-CORS_ALLOWED_ORIGINS = [
-    "https://ecommerce-frontend-slug.onrender.com",
-    "https://ecommerce-backend-bmyp.onrender.com",
-]
-# Comment out or remove the regex while using explicit origins
-# CORS_ALLOWED_ORIGIN_REGEXES = [
-#     r"^https://.*\.onrender\.com$",
-# ]
-
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOWED_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_ALLOWED_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://ecommerce-frontend-slug.onrender.com",
-    "https://ecommerce-backend-bmyp.onrender.com",
-]
-
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
-
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -102,6 +59,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# MongoDB connection
 try:
     connect(
         db=config("MONGO_DB_NAME"),
@@ -113,12 +71,21 @@ except Exception as e:
     logger = logging.getLogger(__name__)
     logger.error(f"MongoDB connection failed: {e}")
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.dummy',
-    }
-}
+# Empty DATABASES for mongoengine use
+DATABASES = {}
 
+# Static files setup
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Language and timezone
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -135,6 +102,51 @@ REST_FRAMEWORK = {
     ],
 }
 
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://ecommerce-frontend-slug.onrender.com",
+    "http://127.0.0.1:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    "https://ecommerce-frontend-slug.onrender.com",
+    "https://ecommerce-backend-bmyp.onrender.com",
+]
+
+# Security Settings
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -154,14 +166,3 @@ LOGGING = {
         },
     },
 }
-
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-STATIC_URL = '/static/'
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-print("MONGO_DB_URI:", config("MONGO_DB_URI"))
