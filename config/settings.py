@@ -15,7 +15,7 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
-    'ecommerce-backend-slug.onrender.com',  # Replace with your actual backend domain
+    'ecommerce-backend-bmyp.onrender.com',  # Your actual backend domain
     '.onrender.com',  # Allow all Render subdomains
 ]
 
@@ -48,7 +48,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', 
+    'corsheaders.middleware.CorsMiddleware', # <--- must be first!
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,11 +78,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# MongoDB connection
 connect(
     db=config("MONGO_DB_NAME"),
     host=config("MONGO_DB_URI")
 )
 
+# Dummy database for Django (since we're using MongoDB)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
