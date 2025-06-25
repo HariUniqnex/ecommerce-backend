@@ -3,19 +3,16 @@ from decouple import config
 from mongoengine import connect
 from pathlib import Path
 
-print("MONGO_DB_URI:", config("MONGO_DB_URI"))
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = config("SECRET_KEY")
 
+SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = [
-    'localhost', 
+    'localhost',
     '127.0.0.1',
-    'ecommerce-backend-bmyp.onrender.com',  
+    'ecommerce-backend-bmyp.onrender.com',
     '.onrender.com',
-    '*',  
 ]
 
 INSTALLED_APPS = [
@@ -27,18 +24,26 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-     'orders.apps.OrdersConfig'
+    'orders.apps.OrdersConfig',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://ecommerce-frontend-slug.onrender.com",
-    "http://localhost:3000",  
-    "http://127.0.0.1:5173",
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.onrender\.com$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
@@ -60,27 +65,16 @@ CORS_ALLOWED_METHODS = [
     'PUT',
 ]
 
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
-
 CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com",
     "https://ecommerce-backend-bmyp.onrender.com",
 ]
 
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 ROOT_URLCONF = 'config.urls'
 
@@ -112,7 +106,7 @@ except Exception as e:
     import logging
     logger = logging.getLogger(__name__)
     logger.error(f"MongoDB connection failed: {e}")
-    
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
@@ -131,7 +125,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  
+        'rest_framework.permissions.AllowAny',
     ],
 }
 
@@ -148,7 +142,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
-        'orders': { 
+        'orders': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
@@ -161,4 +155,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+print("MONGO_DB_URI:", config("MONGO_DB_URI"))
