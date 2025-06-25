@@ -8,15 +8,14 @@ print("MONGO_DB_URI:", config("MONGO_DB_URI"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
-# Use environment variable for DEBUG, default to False in production
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-# CRITICAL: Add your actual backend domain
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
-    'ecommerce-backend-bmyp.onrender.com',  # Your actual backend domain
-    '.onrender.com',  # Allow all Render subdomains
+    'ecommerce-backend-bmyp.onrender.com',  
+    '.onrender.com',
+    '*',  # Allow all hosts for debugging - remove in production
 ]
 
 INSTALLED_APPS = [
@@ -31,24 +30,53 @@ INSTALLED_APPS = [
     'rest_framework',
 ]
 
-# CORS settings for your frontend
+# CORS Configuration - More permissive settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://ecommerce-frontend-slug.onrender.com"
+    "https://ecommerce-frontend-slug.onrender.com",
+    "http://localhost:3000",  # Common React dev port
+    "http://127.0.0.1:5173",
 ]
 
-# Allow credentials for authenticated requests
+# Additional CORS settings for better compatibility
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in debug mode
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
-# Security settings for production
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Security settings - adjusted for deployment
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
+# Disable CSRF for API endpoints (or configure properly)
+CSRF_TRUSTED_ORIGINS = [
+    "https://ecommerce-frontend-slug.onrender.com",
+    "https://ecommerce-backend-bmyp.onrender.com",
+]
+
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # <--- must be first!
+    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,13 +106,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# MongoDB connection
-connect(
-    db=config("MONGO_DB_NAME"),
-    host=config("MONGO_DB_URI")
-)
+# MongoDB connection with error handling
+try:
+    connect(
+        db=config("MONGO_DB_NAME"),
+        host=config("MONGO_DB_URI"),
+        serverSelectionTimeoutMS=5000,  # 5 second timeout
+        connectTimeoutMS=10000,  # 10 second connection timeout
+        socketTimeoutMS=20000,  # 20 second socket timeout
+    )
+    print("MongoDB connection successful")
+except Exception as e:
+    print(f"MongoDB connection failed: {e}")
 
-# Dummy database for Django (since we're using MongoDB)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
@@ -102,6 +136,30 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # For debugging - adjust as needed
+    ],
+}
+
+# Logging configuration for debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'orders': {  # Your app name
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
 }
 
 LANGUAGE_CODE = 'en-us'
