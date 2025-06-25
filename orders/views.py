@@ -31,6 +31,7 @@ from .models import Order
 class DashboardStatsView(APIView):
     def get(self, request):
         orders = Order.objects()
+        print("ORDERS",orders)
         total_orders = orders.count()
 
         total_revenue = sum(
