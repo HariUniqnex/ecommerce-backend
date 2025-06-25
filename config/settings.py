@@ -38,9 +38,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.onrender\.com$",
+# --- CORS CONFIGURATION ---
+CORS_ALLOWED_ORIGINS = [
+    "https://ecommerce-frontend-slug.onrender.com",
+    "https://ecommerce-backend-bmyp.onrender.com",
 ]
+# Comment out or remove the regex while using explicit origins
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     r"^https://.*\.onrender\.com$",
+# ]
 
 CORS_ALLOW_CREDENTIALS = True
 
