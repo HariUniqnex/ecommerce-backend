@@ -97,17 +97,14 @@ def extract_brand_from_item(item):
     return 'Unknown'
 
 def fetch_and_save_amazon_orders():
+    """Main function to fetch and save Amazon orders with complete product details"""
     try:
         access_token = get_access_token()
         if not access_token:
             print("Failed to fetch access token")
             return
 
-        # Change this to start from 2024 instead of today
-        start_date = '2024-01-01T00:00:00Z'  # Start from beginning of 2024
-        
-        orders_url = f"{config('AMAZON_ORDERS_API_URL')}&LastUpdatedAfter={start_date}"
-        
+        orders_url = config('AMAZON_ORDERS_API_URL')
         headers = {
             'Authorization': f'Bearer {access_token}',
             'x-amz-access-token': access_token,
@@ -115,90 +112,76 @@ def fetch_and_save_amazon_orders():
         }
 
         print("Fetching orders from Amazon API...")
-        
-        while orders_url:
-            response = requests.get(orders_url, headers=headers)
-            response.raise_for_status()
-            orders_data = response.json().get('payload', {}).get('Orders', [])
-            
-            if not orders_data:
-                print("No new orders found.")
-                break
+        response = requests.get(orders_url, headers=headers)
+        response.raise_for_status()
+        orders_data = response.json().get('payload', {}).get('Orders', [])
 
-            print(f"Found {len(orders_data)} orders to process")
+        if not orders_data:
+            print("No orders found in the response")
+            return
 
-            saved_count = 0
-            for order in orders_data:
-                try:
-                    order_id = order.get('AmazonOrderId')
-                    if not order_id:
-                        continue
+        print(f"Found {len(orders_data)} orders to process")
 
-                    if Order.objects(order_id=order_id).first():
-                        print(f"Order {order_id} already exists, skipping")
-                        continue
-
-                    print(f"Fetching items for order {order_id}...")
-                    items = fetch_order_items(order_id, access_token)
-                    if items:
-                        print("Available fields in first item:", list(items[0].keys()))
-                        print("Full first item:", items[0])
-                    time.sleep(1) 
-                    products = []
-                    for item in items:
-                        try:
-                            brand = extract_brand_from_item(item)
-                            
-                            product = Product(
-                                title=item.get('Title', 'Unknown Product'),
-                                quantity=int(item.get('QuantityOrdered', 1)),
-                                price=float(item.get('ItemPrice', {}).get('Amount', 0.0)),
-                                brand=brand, 
-                                asin=item.get('ASIN', '')
-                            )
-                            
-                            products.append(product)
-                            print(f"Product saved with brand: {brand}")
-                        except Exception as e:
-                            print(f"Error processing item {item.get('OrderItemId')}: {str(e)}")
-
-                    if not products:
-                        products.append(Product(
-                            title=f"Amazon Order {order_id}",
-                            quantity=1,
-                            price=float(order.get('OrderTotal', {}).get('Amount', 0.0)),
-                            brand="Unknown",
-                            asin="N/A"
-                        ))
-
-                    order_obj = Order(
-                        order_id=order_id,
-                        purchase_date=datetime.strptime(
-                            order.get('PurchaseDate'), 
-                            '%Y-%m-%dT%H:%M:%SZ'
-                        ),
-                        order_status=order.get('OrderStatus'),
-                        products=products,
-                        marketplace_id=order.get('MarketplaceId'),
-                        shipping_address=order.get('ShippingAddress', {}),
-                        paymentMethod=order.get("PaymentMethod", "Other")
-                    )
-                    
-                    order_obj.save()
-                    saved_count += 1
-                    print(f"Successfully saved order {order_id}")
-
-                except Exception as e:
-                    print(f"Failed to process order {order_id}: {str(e)}")
+        saved_count = 0
+        for order in orders_data:
+            try:
+                order_id = order.get('AmazonOrderId')
+                if not order_id:
                     continue
 
-            print(f"\nProcessing complete. Saved {saved_count} new orders")
+                if Order.objects(order_id=order_id).first():
+                    print(f"Order {order_id} already exists, skipping")
+                    continue
 
-            next_token = response.json().get('nextToken')
-            if next_token:
-                orders_url = f"{config('AMAZON_ORDERS_API_URL')}&LastUpdatedAfter={start_date}&nextToken={next_token}"
-            else:
-                orders_url = None  
+                print(f"Fetching items for order {order_id}...")
+                items = fetch_order_items(order_id, access_token)
+                time.sleep(1) 
+
+                products = []
+                for item in items:
+                    try:
+                        product = Product(
+                            title=item.get('Title', 'Unknown Product'),
+                            quantity=int(item.get('QuantityOrdered', 1)),
+                            price=float(item.get('ItemPrice', {}).get('Amount', 0.0)),
+                            brand=item.get('Brand', 'Unknown'),
+                            asin=item.get('ASIN', '')
+                        )
+                        products.append(product)
+                    except Exception as e:
+                        print(f"Error processing item {item.get('OrderItemId')}: {str(e)}")
+
+                if not products:
+                    products.append(Product(
+                        title=f"Amazon Order {order_id}",
+                        quantity=1,
+                        price=float(order.get('OrderTotal', {}).get('Amount', 0.0)),
+                        brand="Unknown",
+                        asin="N/A"
+                    ))
+
+                order_obj = Order(
+                    order_id=order_id,
+                    purchase_date=datetime.strptime(
+                        order.get('PurchaseDate'), 
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ),
+                    order_status=order.get('OrderStatus'),
+                    products=products,
+                    marketplace_id=order.get('MarketplaceId'),
+                    shipping_address=order.get('ShippingAddress', {})
+                )
+                
+                order_obj.save()
+                saved_count += 1
+                print(f"Successfully saved order {order_id}")
+
+            except Exception as e:
+                print(f"Failed to process order {order_id}: {str(e)}")
+                continue
+
+        print(f"\nProcessing complete. Saved {saved_count} new orders")
 
     except Exception as e:
         print(f"Fatal error in fetch_and_save_amazon_orders: {str(e)}")
+        
