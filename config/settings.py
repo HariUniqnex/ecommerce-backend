@@ -117,6 +117,7 @@ CORS_ALLOWED_METHODS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com",
     "https://ecommerce-backend-bmyp.onrender.com",
+    "http://localhost:3000"
 ]
 
 # SECURE_SSL_REDIRECT = not DEBUG
