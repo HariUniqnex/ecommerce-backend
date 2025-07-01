@@ -6,7 +6,7 @@ class Product(EmbeddedDocument):
     quantity = fields.IntField(required=True, min_value=1)
     price = fields.FloatField(required=True)
     brand = fields.StringField()
-
+    
 class Order(Document):
     order_id = fields.StringField(required=True, unique=True)
     purchase_date = fields.DateTimeField(required=True)

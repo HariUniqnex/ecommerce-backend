@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from .models import Order, Product
 from decouple import config
 import time  
+from urllib.parse import urlencode
+import pytz
 
 def get_access_token():
     token_url = config('AMAZON_TOKEN_URL')
@@ -50,6 +52,12 @@ def fetch_orders_page(url, headers):
         return response.json()
     except Exception as e:
         print(f"Error fetching orders page: {str(e)}")
+        print(f"Response status: {response.status_code if 'response' in locals() else 'No response'}")
+        if 'response' in locals():
+            try:
+                print(f"Response body: {response.text}")
+            except:
+                pass
         return None
 
 def process_order_items(items, order_id):
@@ -72,29 +80,41 @@ def process_order_items(items, order_id):
     return products
 
 def fetch_and_save_amazon_orders(start_date=None, end_date=None):
-   
     try:
         access_token = get_access_token()
         if not access_token:
             print("Failed to fetch access token")
             return
-
-        if start_date is None:
-            start_date = datetime.utcnow() - timedelta(days=1)
-            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         
-        if end_date is None:
-            end_date = start_date.replace(hour=23, minute=59, second=59)
+        pacific=pytz.timezone("America/Los_Angeles")
+        now_pacific=datetime.now(pacific)
 
-        start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-        end_date_str = end_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+    
+        
+        if start_date is None:
+            start_date = now_pacific.replace(hour=0,minute=0,second=0,microsecond=0)
+        else:
+            start_date = pacific.localize(start_date.replace(hour=0,minute=0,second=0,microsecond=0))
+
+        if end_date is None:
+            end_date=now_pacific-timedelta(minutes=10)
+            end_date=end_date.replace(second=0,microsecond=0)
+        else:
+            end_date=pacific.localize(end_date)
+
+        start_date_utc = start_date.astimezone(pytz.utc)
+        end_date_utc= end_date.astimezone(pytz.utc)
+
+        start_date_str = start_date_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_date_str = end_date_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         base_url = f"{config('AMAZON_API_BASE_URL')}/orders/v0/orders"
+        
         params = {
             'MarketplaceIds': 'ATVPDKIKX0DER',
-            'LastUpdatedAfter': start_date_str,
-            'LastUpdatedBefore': end_date_str,
-            'OrderStatuses': 'Shipped,PartiallyShipped,Unshipped'
+            'CreatedAfter': start_date_str,
+            'CreatedBefore': end_date_str,
+            'OrderStatuses': ['Shipped', 'PartiallyShipped', 'Unshipped']  
         }
 
         headers = {
@@ -108,10 +128,16 @@ def fetch_and_save_amazon_orders(start_date=None, end_date=None):
         total_saved = 0
 
         while True:
+            current_params = params.copy()
             if next_token:
-                params['NextToken'] = next_token
+                current_params['NextToken'] = next_token
 
-            response = fetch_orders_page(f"{base_url}?{'&'.join(f'{k}={v}' for k,v in params.items())}", headers)
+            query_string = urlencode(current_params, doseq=True)
+            full_url = f"{base_url}?{query_string}"
+            
+            print(f"Request URL: {full_url}")  
+            
+            response = fetch_orders_page(full_url, headers)
             if not response:
                 break
 
@@ -149,10 +175,7 @@ def fetch_and_save_amazon_orders(start_date=None, end_date=None):
 
                 try:
                     purchase_date_str = order.get('PurchaseDate', '')
-                    if purchase_date_str:
-                        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%dT%H:%M:%SZ')
-                    else:
-                        purchase_date = None
+                    purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%dT%H:%M:%SZ') if purchase_date_str else None
 
                     order_obj = Order(
                         order_id=order_id,
@@ -183,12 +206,3 @@ def fetch_and_save_amazon_orders(start_date=None, end_date=None):
         print(f"Fatal error in fetch_and_save_amazon_orders: {str(e)}")
         raise
 
-def fetch_june_25_orders():
-    june_25_start = datetime(2025, 6, 25, 0, 0, 0)
-    june_25_end = datetime(2025, 6, 25, 23, 59, 59)
-    return fetch_and_save_amazon_orders(june_25_start, june_25_end)
-
-def fetch_orders_june_24_to_25():
-    june_24_start = datetime(2025, 6, 24, 0, 0, 0)
-    june_25_end = datetime(2025, 6, 25, 23, 59, 59)
-    return fetch_and_save_amazon_orders(june_24_start, june_25_end)

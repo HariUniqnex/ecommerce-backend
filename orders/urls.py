@@ -8,5 +8,5 @@ urlpatterns = [
     path('orders/<str:order_id>/', OrderDetailView.as_view()),
     path('orders/stats', DashboardStatsView.as_view()),
 
-    path('', TemplateView.as_view(template_name='index.html')),
+    path('/', TemplateView.as_view(template_name='index.html')),
 ]
