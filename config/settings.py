@@ -93,7 +93,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://ecommerce-frontend-slug.onrender.com",
     "http://127.0.0.1:5173",
-    "https://desh-ku81.vercel.app/"
+    "https://desh-eta.vercel.app/"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
