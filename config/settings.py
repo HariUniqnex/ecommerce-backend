@@ -88,11 +88,12 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-   "https://ecommerse-orderlist-9t5u.vercel.app/",
-    "https://ecommerse-orderlist.vercel.app/",
+   "https://ecommerse-orderlist-9t5u.vercel.app",
+    "https://ecommerse-orderlist.vercel.app",
     "http://localhost:3000",
     "https://ecommerce-frontend-slug.onrender.com",
     "http://127.0.0.1:5173",
+    "https://desh-ku81.vercel.app/"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -119,9 +120,9 @@ CORS_ALLOWED_METHODS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://ecommerce-frontend-slug.onrender.com",
     "https://ecommerce-backend-bmyp.onrender.com",
-    "https://ecommerse-orderlist.vercel.app/",
+    "https://ecommerse-orderlist.vercel.app",
     "http://localhost:3000",
-    "https://ecommerse-orderlist-9t5u.vercel.app/"
+    "https://ecommerse-orderlist-9t5u.vercel.app"
 ]
 
 # SECURE_SSL_REDIRECT = not DEBUG
